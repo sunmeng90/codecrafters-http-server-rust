@@ -2,11 +2,11 @@ use std::{io::{Read, Write}, net::TcpListener};
 use std::net::TcpStream;
 
 use anyhow::Context;
+use regex::Regex;
 
 fn main() -> anyhow::Result<()> {
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     println!("Logs from your program will appear here!");
-
 
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
 
@@ -35,15 +35,36 @@ fn handle_client(mut stream: TcpStream) -> anyhow::Result<()> {
         .next()
         .context("No first line in request")?;
 
+    println!("First line in req [{}]", first_line);
+
+    let reg_pattern = r"/echo/([^/]+)";
+
     let path = first_line.splitn(3, " ")
         .nth(1)
-        .context("No path in request")?;
+        .context("Failed to get path")?;
 
-    let resp = if path == "/" {
-        "HTTP/1.1 200 OK\r\n\r\n"
-    } else {
-        "HTTP/1.1 404 Not Found\r\n\r\n"
-    };
-    stream.write(resp.as_bytes())?;
+    println!("Path [{}] in req", path);
+
+    let re = Regex::new(reg_pattern).context("Failed to compile echo pattern")?;
+
+
+    match re.captures(path) {
+        Some(captures) => {
+            let echo_str = captures.get(1)
+                .context("Failed to get a capture group")?
+                .as_str()
+                .to_string();
+
+            println!("echo [{}] to client", echo_str);
+
+            let resp = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", echo_str.len(), echo_str);
+            stream.write(resp.as_bytes())
+                .context("Failed to write response")?;
+        }
+        None => {
+            println!("Request path not matched")
+        }
+    }
+
     Ok(())
 }
