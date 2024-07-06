@@ -1,6 +1,9 @@
 use std::{io::{Read, Write}, net::TcpListener};
 use std::net::TcpStream;
-fn main() -> Result<(), std::io::Error> {
+
+use anyhow::Context;
+
+fn main() -> anyhow::Result<()> {
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     println!("Logs from your program will appear here!");
 
@@ -19,27 +22,28 @@ fn main() -> Result<(), std::io::Error> {
     Ok(())
 }
 
-fn handle_client(mut stream: TcpStream) -> Result<(), std::io::Error> {
+fn handle_client(mut stream: TcpStream) -> anyhow::Result<()> {
     let mut buf = [0; 1024];
     let bytes_read = stream.read(&mut buf)?;
     if bytes_read == 0 {
         return Ok(());
     }
 
-    let path = String::from_utf8_lossy(&buf[..bytes_read])
+    let first_line = std::str::from_utf8(&buf[..bytes_read])
+        .context("Invalid utf-8")?
         .lines()
         .next()
-        .expect("should have first line in request")
-        .splitn(3, " ")
-        .skip(1)
-        .next()
-        .to_owned()
-        .unwrap()
-        .to_owned();
-    if path == "/" {
-        stream.write(b"HTTP/1.1 200 OK\r\n\r\n").expect("200 \n");
+        .context("No first line in request")?;
+
+    let path = first_line.splitn(3, " ")
+        .nth(1)
+        .context("No path in request")?;
+
+    let resp = if path == "/" {
+        "HTTP/1.1 200 OK\r\n\r\n"
     } else {
-        stream.write(b"HTTP/1.1 404 Not Found\r\n\r\n").expect("200 \n");
-    }
+        "HTTP/1.1 404 Not Found\r\n\r\n"
+    };
+    stream.write(resp.as_bytes())?;
     Ok(())
 }
