@@ -45,6 +45,12 @@ fn handle_client(mut stream: TcpStream) -> anyhow::Result<()> {
 
     println!("Path [{}] in req", path);
 
+    if path == "/" {
+        stream.write("HTTP/1.1 200 OK\r\n\r\n".as_bytes())
+            .context("Failed to write response")?;
+        return Ok(());
+    }
+
     let re = Regex::new(reg_pattern).context("Failed to compile echo pattern")?;
 
 
@@ -62,7 +68,9 @@ fn handle_client(mut stream: TcpStream) -> anyhow::Result<()> {
                 .context("Failed to write response")?;
         }
         None => {
-            println!("Request path not matched")
+            println!("Request path not matched");
+            stream.write("HTTP/1.1 404 Not Found\r\n\r\n".as_bytes())
+                .context("Failed to write response")?;
         }
     }
 
