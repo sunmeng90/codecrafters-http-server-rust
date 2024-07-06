@@ -15,6 +15,7 @@ fn main() {
                 let path = String::from_utf8_lossy(&buf[..])
                     .lines()
                     .next()
+                    .expect("should have first line in request")
                     .splitn(3, " ")
                     .skip(1)
                     .next()
