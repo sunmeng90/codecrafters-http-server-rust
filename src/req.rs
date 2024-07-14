@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::hash::Hash;
 use std::io::{BufRead, BufReader, Read};
 use std::net::TcpStream;
 use std::str::FromStr;

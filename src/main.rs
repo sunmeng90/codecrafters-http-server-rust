@@ -1,7 +1,5 @@
 use std::env;
-use std::io::{Read, Write};
 
-use anyhow::Context;
 
 use crate::handlers::{handle_echo, handle_file, handle_user_agent};
 use crate::route::Router;
