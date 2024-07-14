@@ -18,9 +18,9 @@ fn main() -> anyhow::Result<()> {
 
     let mut router = Router::new();
 
-    router.add_route("/", handle_base);
-    router.add_route("/echo", handle_echo);
+    router.add_route("/echo/:echo", handle_echo);
     router.add_route("/user-agent", handle_user_agent);
+    router.add_route("/", handle_base);
 
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
 
@@ -45,7 +45,8 @@ fn handle_client(mut stream: TcpStream, router: &Router) -> anyhow::Result<()> {
     match parse_request(&mut stream) {
         Ok(req) => {
             let resp = router.handle_req(&req);
-            stream.write_all(&resp.to_bytes()).context("Failed to write response")?;
+            let content = &resp.to_bytes();
+            stream.write_all(content).context("Failed to write response")?;
             stream.flush()?
         }
         Err(err) => {

@@ -3,6 +3,7 @@ use std::ops::Add;
 
 use nom::AsBytes;
 
+#[derive(Debug)]
 pub struct Response {
     pub status_code: u16,
     pub reason_phrase: &'static str,
@@ -27,14 +28,15 @@ impl Response {
 
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut resp = String::new();
-        let first_line = format!("HTTP/1.1 {} {}", self.status_code, self.reason_phrase);
+        let first_line = format!("HTTP/1.1 {} {}\r\n", self.status_code, self.reason_phrase);
         resp = resp.add(&first_line.as_str());
         self.headers.iter().for_each(
             |(k, v)| {
-                let header_line = format!("{}: {}", k, v);
+                let header_line = format!("{}: {}\r\n", k, v);
                 resp = resp.clone().add(&header_line.as_str());
             }
         );
+        resp = resp.add("\r\n");
         let mut resp = resp.as_bytes().to_vec();
         resp.extend(&self.body);
         resp.to_vec()

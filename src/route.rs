@@ -38,7 +38,8 @@ impl Router {
         for route in &self.routes {
             if let Some(captures) = route.pattern.captures(&req.uri) {
                 let mut params_map = HashMap::new();
-                for (name, value) in route.pattern.capture_names().zip(captures.iter().skip(1)) {
+                println!("pattern: {}, {:?}, {:?}", req.uri, route.pattern, route.pattern.capture_names());
+                for (name, value) in route.pattern.capture_names().skip(1).zip(captures.iter().skip(1)) {
                     if let (Some(name), Some(value)) = (name, value) {
                         params_map.insert(name.to_string(), value.as_str().to_string());
                     }

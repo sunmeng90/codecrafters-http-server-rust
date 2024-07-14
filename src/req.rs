@@ -14,7 +14,6 @@ pub struct Request {
 }
 
 pub fn parse_request(stream: &mut TcpStream) -> Result<Request, &'static str> {
-    println!("try to parse request");
     let mut reader = BufReader::new(stream);
     let mut headers = HashMap::new();
     let mut buffer = String::new();
@@ -33,7 +32,6 @@ pub fn parse_request(stream: &mut TcpStream) -> Result<Request, &'static str> {
     let http_version = HttpVersion::from_str(http_version_str).map_err(|_| "Invalid HTTP version")?;
 
     buffer.clear();
-    println!("try to parse header");
 
     // read headers
     loop {
@@ -49,11 +47,24 @@ pub fn parse_request(stream: &mut TcpStream) -> Result<Request, &'static str> {
         buffer.clear();
     }
 
-    println!("try to parse body");
+    let mut len = if let Some(len) = headers.get("content-length") {
+        len.parse::<usize>().unwrap()
+    } else {
+        0
+    };
+
     // read the body
+    let mut buf = [0; 1024];
     let mut body = Vec::new();
-    reader.read_to_end(&mut body).map_err(|_| "Failed to read the body")?;
-    println!("request parsed successfully");
+
+    while len > 0 {
+        let read_bytes_count = reader.read(&mut buf).map_err(|_| "Failed to read the body")?;
+        if read_bytes_count > 0 {
+            body.extend(buf);
+            len -= read_bytes_count;
+        }
+    }
+
     Ok(Request {
         method,
         uri,
