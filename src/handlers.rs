@@ -5,6 +5,9 @@ use nom::AsBytes;
 use crate::req::Request;
 use crate::resp::Response;
 
+pub fn handle_base(req: &Request, param_map: &HashMap<String, String>) -> Response {
+    Response::new(200, "OK", "".as_bytes().to_vec())
+}
 pub fn handle_404(req: &Request) -> Response {
     Response::new(404, "Not Found", "404 Not Found".as_bytes().to_vec())
 }
