@@ -23,18 +23,23 @@ pub fn handle_echo(req: &Request, param_map: &HashMap<String, String>) -> Respon
         let encoding = if let Some(encoding) = req.headers.get("Accept-Encoding") {
             encoding
         } else { "" };
-
-        if encoding == "gzip" {
+        let encoding = if let Some(gzip_encoding) = encoding.split(", ")
+            .filter(|e| e.to_string() == "gzip").next() {
+            gzip_encoding
+        } else {
+            ""
+        };
+        return if encoding == "gzip" {
             let mut compress_contents = Vec::new();
             let mut encoder = GzEncoder::new(&echo.as_bytes()[..], Compression::default());
             encoder.read_to_end(&mut compress_contents).unwrap();
             let mut resp = Response::new(200, "OK", compress_contents);
             resp.set_header("Content-Encoding", "gzip");
-            return resp;
+            resp
         } else {
             let mut resp = Response::new(200, "OK", echo.as_bytes().to_vec());
-            return resp;
-        }
+            resp
+        };
     } else {
         Response::new(400, "Bad Request", "".as_bytes().to_vec())
     }
