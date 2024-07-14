@@ -56,6 +56,9 @@ pub fn handle_file(req: &Request, param_map: &HashMap<String, String>) -> Respon
 
 
 pub fn handle_file_download(path: PathBuf) -> Response {
+    if !path.exists() {
+        return Response::new(404, "Not Found", "".as_bytes().to_vec());
+    }
     match File::open(path) {
         Ok(mut file) => {
             let mut contents = Vec::new();
