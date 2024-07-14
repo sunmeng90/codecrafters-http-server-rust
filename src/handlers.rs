@@ -41,10 +41,10 @@ pub fn handle_file(req: &Request, param_map: &HashMap<String, String>) -> Respon
 
         match req.method {
             HttpMethod::GET => {
-                handle_file_download(path)
+                return handle_file_download(path)
             }
             HttpMethod::POST => {
-                handle_file_upload(req, &path)
+                return handle_file_upload(req, &path)
             }
             _ => {
                 Response::new(400, "Bad Request", "".as_bytes().to_vec())
@@ -56,7 +56,6 @@ pub fn handle_file(req: &Request, param_map: &HashMap<String, String>) -> Respon
 
 
 pub fn handle_file_download(path: PathBuf) -> Response {
-    println!("download file");
     match File::open(path) {
         Ok(mut file) => {
             let mut contents = Vec::new();
@@ -74,15 +73,12 @@ pub fn handle_file_download(path: PathBuf) -> Response {
 }
 
 pub fn handle_file_upload(req: &Request, path: &PathBuf) -> Response {
-    println!("upload file");
     if path.exists() {
         fs::remove_file(path).unwrap_or_default();
     }
 
     let mut file = File::create(path).unwrap();
-    println!("upload file content");
     let content = req.body.as_bytes();
-    println!("upload file content: {}", content.len());
     file.write_all(content).unwrap();
     file.flush();
 
