@@ -22,13 +22,11 @@ fn main() -> anyhow::Result<()> {
     let mut dir = String::new();
     if args.len() < 2 {
         eprintln!("insufficient arguments");
-        std::process::exit(1);
     } else {
         let arg_name = args.get(0).unwrap();
         if arg_name == "--directory" {
             dir = args.get(1).unwrap().to_string();
             env::set_var("download_dir", dir);
-
         }
     }
 
