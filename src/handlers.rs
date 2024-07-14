@@ -37,16 +37,21 @@ pub fn handle_file_download(req: &Request, param_map: &HashMap<String, String>) 
     if let Some(filename) = param_map.get("file_name") {
         let mut path = PathBuf::from(env::var("download_dir").unwrap_or_default());
         path.push(filename);
-        let mut file = File::open(path).unwrap();
-        let mut contents = Vec::new();
-        file.read_to_end(&mut contents).unwrap();
+        match File::open(path) {
+            Ok(mut file) => {
+                let mut contents = Vec::new();
+                file.read_to_end(&mut contents).unwrap();
 
-        let mut resp = Response::new(200, "OK", contents);
-        resp.content_type("application/octet-stream");
-        resp
-    } else {
-        Response::new(400, "Bad Request", "".as_bytes().to_vec())
+                let mut resp = Response::new(200, "OK", contents);
+                resp.content_type("application/octet-stream");
+                return resp;
+            }
+            Err(err) => {
+                eprintln!("Failed to open file: {}", err);
+            }
+        }
     }
+    Response::new(404, "Not Found", "".as_bytes().to_vec())
 }
 
 
