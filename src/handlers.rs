@@ -26,8 +26,8 @@ pub fn handle_echo(req: &Request, param_map: &HashMap<String, String>) -> Respon
 
         if encoding == "gzip" {
             let mut compress_contents = Vec::new();
-            let mut encoder = GzEncoder::new(&echo, Compression::default());
-            encoder.read_to_end(&mut compress_contents)?;
+            let mut encoder = GzEncoder::new(&echo.as_bytes()[..], Compression::default());
+            encoder.read_to_end(&mut compress_contents).unwrap();
             let mut resp = Response::new(200, "OK", compress_contents);
             resp.set_header("Content-Encoding", "gzip");
             return resp;
