@@ -20,7 +20,21 @@ pub fn handle_404(req: &Request) -> Response {
 
 pub fn handle_echo(req: &Request, param_map: &HashMap<String, String>) -> Response {
     if let Some(echo) = param_map.get("echo") {
-        Response::new(200, "OK", echo.as_bytes().to_vec())
+        let encoding = if let Some(encoding) = req.headers.get("Accept-Encoding") {
+            encoding
+        } else { "" };
+
+        if encoding == "gzip" {
+            let mut compress_contents = Vec::new();
+            let mut encoder = GzEncoder::new(&echo, Compression::default());
+            encoder.read_to_end(&mut compress_contents)?;
+            let mut resp = Response::new(200, "OK", compress_contents);
+            resp.set_header("Content-Encoding", "gzip");
+            return resp;
+        } else {
+            let mut resp = Response::new(200, "OK", echo.as_bytes().to_vec());
+            return resp;
+        }
     } else {
         Response::new(400, "Bad Request", "".as_bytes().to_vec())
     }
