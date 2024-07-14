@@ -3,7 +3,7 @@ use std::io::{Read, Write};
 
 use anyhow::Context;
 
-use crate::handlers::{handle_echo, handle_file_download, handle_user_agent};
+use crate::handlers::{handle_echo, handle_file, handle_user_agent};
 use crate::route::Router;
 use crate::server::Server;
 
@@ -33,7 +33,7 @@ fn main() -> anyhow::Result<()> {
     let mut router = Router::new();
     router.add_route("/echo/:echo", handle_echo);
     router.add_route("/user-agent", handle_user_agent);
-    router.add_route("/files/:file_name", handle_file_download);
+    router.add_route("/files/:file_name", handle_file);
 
     Server::new("127.0.0.1:4221", router).run();
 
