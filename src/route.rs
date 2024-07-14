@@ -6,7 +6,7 @@ use crate::handlers::{handle_404, handle_base};
 use crate::req::Request;
 use crate::resp::Response;
 
-type Handler = fn(&Request, &HashMap<String, String>) -> Response;
+pub type Handler = fn(&Request, &HashMap<String, String>) -> Response;
 
 struct Route {
     pattern: Regex,

@@ -1,4 +1,8 @@
 use std::collections::HashMap;
+use std::env;
+use std::fs::File;
+use std::io::Read;
+use std::path::PathBuf;
 
 use nom::AsBytes;
 
@@ -27,4 +31,22 @@ pub fn handle_user_agent(req: &Request, param_map: &HashMap<String, String>) -> 
         Response::new(400, "Bad Request", "".as_bytes().to_vec())
     }
 }
+
+
+pub fn handle_file_download(req: &Request, param_map: &HashMap<String, String>) -> Response {
+    if let Some(filename) = param_map.get("file_name") {
+        let mut path = PathBuf::from(env::var("download_dir").unwrap_or_default());
+        path.push(filename);
+        let mut file = File::open(path).unwrap();
+        let mut contents = Vec::new();
+        file.read_to_end(&mut contents).unwrap();
+
+        let mut resp = Response::new(200, "OK", contents);
+        resp.content_type("application/octet-stream");
+        resp
+    } else {
+        Response::new(400, "Bad Request", "".as_bytes().to_vec())
+    }
+}
+
 

@@ -26,6 +26,10 @@ impl Response {
         }
     }
 
+    pub fn content_type(&mut self, content_type: &str) {
+        self.headers.insert("Content-Type".to_owned(), content_type.to_string());
+    }
+
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut resp = String::new();
         let first_line = format!("HTTP/1.1 {} {}\r\n", self.status_code, self.reason_phrase);
