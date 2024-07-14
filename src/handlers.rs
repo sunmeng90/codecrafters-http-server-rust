@@ -4,6 +4,8 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 
+use flate2::Compression;
+use flate2::read::GzEncoder;
 use nom::AsBytes;
 
 use crate::req::{HttpMethod, Request};
@@ -41,10 +43,10 @@ pub fn handle_file(req: &Request, param_map: &HashMap<String, String>) -> Respon
 
         match req.method {
             HttpMethod::GET => {
-                return handle_file_download(path)
+                return handle_file_download(req, path).unwrap();
             }
             HttpMethod::POST => {
-                return handle_file_upload(req, &path)
+                return handle_file_upload(req, &path);
             }
             _ => {
                 Response::new(400, "Bad Request", "".as_bytes().to_vec())
@@ -55,22 +57,36 @@ pub fn handle_file(req: &Request, param_map: &HashMap<String, String>) -> Respon
 }
 
 
-pub fn handle_file_download(path: PathBuf) -> Response {
+pub fn handle_file_download(req: &Request, path: PathBuf) -> anyhow::Result<Response> {
     if !path.exists() {
-        return Response::new(404, "Not Found", "".as_bytes().to_vec());
+        return Ok(Response::new(404, "Not Found", "".as_bytes().to_vec()));
     }
     match File::open(path) {
         Ok(mut file) => {
             let mut contents = Vec::new();
             file.read_to_end(&mut contents).unwrap();
 
-            let mut resp = Response::new(200, "OK", contents);
-            resp.content_type("application/octet-stream");
-            return resp;
+            let encoding = if let Some(encoding) = req.headers.get("Accept-Encoding") {
+                encoding
+            } else { "" };
+
+            if encoding == "gzip" {
+                let mut compress_contents = Vec::new();
+                let mut encoder = GzEncoder::new(&contents[..], Compression::default());
+                encoder.read_to_end(&mut compress_contents)?;
+                let mut resp = Response::new(200, "OK", compress_contents);
+                resp.content_type("application/octet-stream");
+                resp.set_header("Content-Encoding", "gzip");
+                return Ok(resp);
+            } else {
+                let mut resp = Response::new(200, "OK", contents);
+                resp.content_type("application/octet-stream");
+                return Ok(resp);
+            }
         }
         Err(err) => {
             eprintln!("Failed to open file: {}", err);
-            Response::new(500, "Internal Server Error", "".as_bytes().to_vec())
+            Ok(Response::new(500, "Internal Server Error", "".as_bytes().to_vec()))
         }
     }
 }
