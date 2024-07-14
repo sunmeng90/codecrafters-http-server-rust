@@ -47,7 +47,7 @@ pub fn parse_request(stream: &mut TcpStream) -> Result<Request, &'static str> {
         buffer.clear();
     }
 
-    let mut len = if let Some(len) = headers.get("content-length") {
+    let mut len = if let Some(len) = headers.get("Content-Length") {
         len.parse::<usize>().unwrap()
     } else {
         0
