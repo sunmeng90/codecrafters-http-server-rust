@@ -60,7 +60,7 @@ pub fn parse_request(stream: &mut TcpStream) -> Result<Request, &'static str> {
     while len > 0 {
         let read_bytes_count = reader.read(&mut buf).map_err(|_| "Failed to read the body")?;
         if read_bytes_count > 0 {
-            body.extend(buf);
+            body.extend_from_slice(&buf[..read_bytes_count]);
             len -= read_bytes_count;
         }
     }
