@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use regex::Regex;
 
-use crate::handlers::handle_404;
+use crate::handlers::{handle_404, handle_base};
 use crate::req::Request;
 use crate::resp::Response;
 
@@ -23,10 +23,6 @@ impl Router {
         }
     }
     pub fn add_route(&mut self, path: &str, handler: Handler) {
-        // "".replace
-        // self.routes.insert(path.into(), handler);
-        // path to regex
-        // /api/user/:id/
         let regex_pattern = Regex::new(&route_to_regex(path)).unwrap();
         self.routes.push(Route {
             pattern: regex_pattern,
@@ -35,10 +31,15 @@ impl Router {
     }
 
     pub fn handle_req(&self, req: &Request) -> Response {
+        if req.uri == "/" || req.uri.is_empty() {
+            let params_map = HashMap::new();
+            return handle_base(req, &params_map);
+        }
+
         for route in &self.routes {
             if let Some(captures) = route.pattern.captures(&req.uri) {
                 let mut params_map = HashMap::new();
-                println!("pattern: {}, {:?}, {:?}", req.uri, route.pattern, route.pattern.capture_names());
+                println!("Req: {}, match pattern: {:?}, capture groups: {:?}", req.uri, route.pattern, route.pattern.capture_names());
                 for (name, value) in route.pattern.capture_names().skip(1).zip(captures.iter().skip(1)) {
                     if let (Some(name), Some(value)) = (name, value) {
                         params_map.insert(name.to_string(), value.as_str().to_string());

@@ -3,7 +3,7 @@ use std::net::TcpStream;
 
 use anyhow::Context;
 
-use crate::handlers::{handle_base, handle_echo, handle_user_agent};
+use crate::handlers::{handle_echo, handle_user_agent};
 use crate::req::parse_request;
 use crate::route::Router;
 
@@ -20,7 +20,6 @@ fn main() -> anyhow::Result<()> {
 
     router.add_route("/echo/:echo", handle_echo);
     router.add_route("/user-agent", handle_user_agent);
-    router.add_route("/", handle_base);
 
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
 
